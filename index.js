@@ -45,11 +45,17 @@ app.use('*', (req, res) => {
 
 
 
-if (process.env.VERCEL !== '1') {
-  app.listen(PORT, () => {
-    console.log(`Local server on port ${PORT}`);
-  });
-}
 
+if (process.env.VERCEL !== '1') {
+  
+    console.log(`Local server on port ${PORT}`);
+}
+process.on('unhandledRejection', (err) => {
+  console.error('Unhandled Rejection:', err);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+});
 
   export default app;
