@@ -21,7 +21,7 @@ mongoose.connect(process.env.MONGODB_URI)
 
 app.use(express.json());
 app.use(cors({origin: 'https://my-react-app-taupe-six.vercel.app'}));
-
+app.get('/favicon.ico', (req, res) => res.status(204).end());
 // File upload middleware
 app.use(fileUpload({
   limits: { fileSize: 50 * 1024 * 1024 }, // 50MB limit example
