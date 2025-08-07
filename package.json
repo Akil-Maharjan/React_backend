@@ -1,5 +1,6 @@
 {
   "name": "react-app-backend",
+  "version": "1.0.0",
   "type": "module",
   "engines": { "node": "22.x" },
   "scripts": {

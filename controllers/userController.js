@@ -10,9 +10,9 @@ export const userLogin = async(req, res)=>{
   try{
       const user = await User.findOne({email});
       if(!user) return res.status(400).json({message: 'Invalid email'});
-      const isMatch = bcrypt.compareSync(password, user.password);
+      const isMatch = await bcrypt.compare(password, user.password);
       if(!isMatch) return res.status(400).json({message: 'Invalid password'});
-      const token = jwt.sign({id: user._id, role: user.role }, 'secret');
+      const token = jwt.sign({id: user._id, role: user.role }, process.env.JWT_SECRET);
       return res.status(200).json({token,
         message: `Welcome ${user.username}`
 
@@ -30,7 +30,7 @@ export const userRegister = async (req, res)=>{
   try{
     const isExist = await User.findOne({email});
     if(isExist) return res.status(400).json({message: 'User already exist'});
-    const hash = bcrypt.hashSync(password, 10);
+    const hash = await bcrypt.hash(password, 10);
     await User.create({
       username,
       email,
