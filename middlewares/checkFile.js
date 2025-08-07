@@ -1,43 +1,80 @@
 import path from 'path';
+import { v4 as uuidv4 } from 'uuid';
+import bucket from '../utils/firebaseAdmin.js';
 
-const supExtType = ['.jpg', '.jpeg', '.png', '.gif', '.svg', '.webp'];
+const supportedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.svg', '.webp'];
 
-export const checkFile = (req, res, next) => {
+// Original middleware for new uploads
+export const checkFile = async (req, res, next) => {
   const image = req.files?.image;
-
-  if (!image) return res.status(400).json({ message: 'Please provide an image' });
+  if (!image) return next(); // Skip if no image (for optional uploads)
 
   const extType = path.extname(image.name).toLowerCase();
-  const imagePath = `uploads/${image.name}`;
-
-  if (!supExtType.includes(extType)) {
+  if (!supportedExtensions.includes(extType)) {
     return res.status(400).json({ message: 'Unsupported image format' });
   }
 
-  image.mv(`./${imagePath}`, (err) => {
-    if (err) return res.status(500).json({ message: `Error saving image: ${err}` });
+  const filename = `${uuidv4()}${extType}`;
+  const file = bucket.file(filename);
 
-    req.imagePath = imagePath;
+  try {
+    await file.save(image.data, {
+      metadata: { contentType: image.mimetype },
+      public: true,
+      resumable: false,
+    });
+
+    req.imageInfo = {
+      url: `https://storage.googleapis.com/${bucket.name}/${filename}`,
+      filename: filename
+    };
     next();
-  });
+  } catch (error) {
+    console.error('Upload Error:', error);
+    res.status(500).json({ message: 'Image upload failed' });
+  }
 };
 
-export const updateCheckFile = (req, res, next) => {
+// Specialized middleware for updates
+export const updateCheckFile = async (req, res, next) => {
   const image = req.files?.image;
-
-  if (!image) return next(); // No new image, just proceed
+  if (!image) return next(); // Skip if no new image provided
 
   const extType = path.extname(image.name).toLowerCase();
-  const imagePath = `uploads/${image.name}`;
-
-  if (!supExtType.includes(extType)) {
+  if (!supportedExtensions.includes(extType)) {
     return res.status(400).json({ message: 'Unsupported image format' });
   }
 
-  image.mv(`./${imagePath}`, (err) => {
-    if (err) return res.status(500).json({ message: `Error saving image: ${err}` });
+  // Delete old image if exists
+  if (req.product?.image) { // Assuming product is attached by previous middleware
+    try {
+      const oldFilename = req.product.image.split('/').pop();
+      await bucket.file(oldFilename).delete();
+    } catch (deleteError) {
+      console.error('Old image deletion failed:', deleteError);
+      // Continue with new upload anyway
+    }
+  }
 
-    req.imagePath = imagePath;
+  // Upload new image
+  const filename = `${uuidv4()}${extType}`;
+  const file = bucket.file(filename);
+
+  try {
+    await file.save(image.data, {
+      metadata: { contentType: image.mimetype },
+      public: true,
+      resumable: false,
+    });
+
+    req.imageInfo = {
+      url: `https://storage.googleapis.com/${bucket.name}/${filename}`,
+      filename: filename,
+      isUpdate: true
+    };
     next();
-  });
+  } catch (error) {
+    console.error('Update Upload Error:', error);
+    res.status(500).json({ message: 'Image update failed' });
+  }
 };
