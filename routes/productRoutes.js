@@ -1,6 +1,6 @@
 import express from 'express';
 import { addProduct, getProduct, getProducts, updateProduct, deleteProduct } from '../controllers/productController.js';
-import { checkFile, updateCheckFile } from '../middlewares/checkFIle.js';
+import { checkFile, updateCheckFile } from '../middlewares/checkFile.js';
 import { adminCheck, userCheck } from '../middlewares/auth.js';
 import { validate, productSchema } from '../utils/validator.js';
 
