@@ -10,7 +10,7 @@ export const productSchema = Joi.object({
     description : Joi.string().required(),
     price : Joi.number().required(),
 category : Joi.string().valid('Men\'s Clothing', 'Women\'s Clothing', 'Electronics', 'Jewelery', 'Shoes', 'Watches', 'Bags').required(),
-brand : Joi.string().valid('nike', 'adidas', 'reebok', 'puma', 'converse', 'dell', 'acer', 'macbook', 'iphone', 'samsung', 'sony', 'apple', 'gucci').required(),
+brand : Joi.string().valid('Nike', 'Adidas', 'Reebok', 'Puma', 'Converse', 'Dell', 'Acer', 'Macbook', 'Iphone', 'Samsung', 'Sony', 'Apple', 'Gucci').required(),
 stock : Joi.number().required(),
 
 });
