@@ -6,7 +6,7 @@ import fileUpload from 'express-fileupload';
 import cors from 'cors';
 import dotenv from 'dotenv';
 
-import dotenv from 'dotenv';
+
 dotenv.config({ override: false }); // Load environment variables
 
 const app = express();
