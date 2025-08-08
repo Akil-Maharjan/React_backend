@@ -33,16 +33,7 @@ app.use(limiter);
 // Body Parsing
 app.use(express.json({ limit: '10kb' }));
 app.use(helmet());
-app.use(cors({
-  origin: [
-    process.env.CLIENT_URL, 
-    'http://localhost:5173', // For local development
-    'https://my-react-app-taupe-six.vercel.app' // Your actual frontend URL
-  ],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
-}));
+app.use(cors());
 app.options('*', cors());
 app.use(express.urlencoded({ extended: true }));
 const connectWithRetry = async () => {
