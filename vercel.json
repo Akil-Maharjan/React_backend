@@ -5,13 +5,7 @@
       "src": "index.js",
       "use": "@vercel/node",
       "config": {
-        "includeFiles": [
-          "controllers/**",
-          "middlewares/**",
-          "models/**",
-          "routes/**",
-          "utils/**"
-        ],
+        "includeFiles": ["src/**/*.js"],
         "maxLambdaSize": "50mb"
       }
     }
@@ -20,15 +14,9 @@
     {
       "src": "/api/(.*)",
       "dest": "index.js",
-      "methods": ["GET", "POST", "PUT", "PATCH", "DELETE"]
-    },
-    {
-      "src": "/(.*)",
-      "status": 404,
-      "dest": "index.js"
+      "headers": {
+        "Cache-Control": "no-store"
+      }
     }
-  ],
-  "env": {
-    "NODE_ENV": "production"
-  }
+  ]
 }
