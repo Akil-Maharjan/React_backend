@@ -71,8 +71,15 @@ app.use((req, res, next) => {
   next();
 });
 
-app.get('/api/health', (req, res) => {
-  res.sendStatus(200);
+app.get('/', (req, res) => {
+  res.json({ 
+    status: 'running',
+    message: 'Backend is working',
+    endpoints: {
+      api: '/api/*',
+      health: '/api/health'
+    }
+  });
 });
 // API Routes
 app.use('/api/products', productRouter);
