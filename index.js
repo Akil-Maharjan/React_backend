@@ -30,6 +30,8 @@ const connectWithRetry = async () => {
       useUnifiedTopology: true,
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 30000,
+      retryWrites: true,
+      w: 'majority'
     });
     console.log('MongoDB connected');
   } catch (err) {
