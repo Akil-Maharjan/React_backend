@@ -1,7 +1,7 @@
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import bucket from '../utils/firebaseAdmin.js';
-import { logger } from '../utils/logger.js'
+import logger from '../utils/logger.js'
 
 const supportedExtensions = ['.jpg', '.jpeg', '.png', '.webp'];
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
