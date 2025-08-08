@@ -23,6 +23,28 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 // Database Connection with Retry
+
+
+// Security Middleware
+
+// Rate Limiting
+
+
+// Body Parsing
+app.use(express.json({ limit: '10kb' }));
+app.use(helmet());
+app.use(cors({
+  origin: [
+    process.env.CLIENT_URL, 
+    'http://localhost:5173/', // For local development
+    'https://my-react-app-taupe-six.vercel.app/' // Your actual frontend URL
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}));
+app.options('*', cors());
+app.use(express.urlencoded({ extended: true }));
 const connectWithRetry = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI, {
@@ -41,26 +63,6 @@ const connectWithRetry = async () => {
 };
 connectWithRetry();
 
-// Security Middleware
-app.use(helmet());
-app.use(cors({
-  origin: [
-    process.env.CLIENT_URL, 
-    'http://localhost:3000', // For local development
-    'https://my-react-app-taupe-six.vercel.app/' // Your actual frontend URL
-  ],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
-}));
-app.options('*', cors());
-// Rate Limiting
-
-
-// Body Parsing
-app.use(express.json({ limit: '10kb' }));
-app.use(express.urlencoded({ extended: true }));
-
 // File Upload with Validation
 app.use(fileUpload({
   limits: { fileSize: 50 * 1024 * 1024 },
@@ -72,6 +74,7 @@ app.use(fileUpload({
 // Route Validation Middleware
 app.use((req, res, next) => {
   if (req.url.includes('git.new')) {
+    console.error('Invalid route detected:', req.url);
     return res.status(400).json({ error: 'Invalid request path' });
   }
   next();
