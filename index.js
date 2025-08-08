@@ -44,8 +44,14 @@ connectWithRetry();
 // Security Middleware
 app.use(helmet());
 app.use(cors({
-  origin: process.env.CLIENT_URL,
-  credentials: true
+  origin: [
+    process.env.CLIENT_URL, 
+    'http://localhost:3000', // For local development
+    'https://your-frontend.vercel.app' // Your actual frontend URL
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 // Rate Limiting
