@@ -12,7 +12,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const app = express();
-
+app.set('trust proxy', 1);
 // Database Connection with Retry
 const connectWithRetry = async () => {
   try {
@@ -40,7 +40,12 @@ app.use(cors({
 // Rate Limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100
+  max: 100,
+  message: 'Too many requests from this IP',
+  validate: {
+    trustProxy: true,
+    xForwardedForHeader: true
+  }
 });
 app.use(limiter);
 
