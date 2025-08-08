@@ -13,6 +13,15 @@ dotenv.config();
 
 const app = express();
 app.set('trust proxy', 1);
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: 'Too many requests from this IP',
+  validate: {
+    trustProxy: true,
+  }
+});
+app.use(limiter);
 // Database Connection with Retry
 const connectWithRetry = async () => {
   try {
@@ -20,7 +29,8 @@ const connectWithRetry = async () => {
       useNewUrlParser: true,
       useUnifiedTopology: true,
       serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 30000
+      socketTimeoutMS: 30000,
+      srv: true
     });
     console.log('MongoDB connected');
   } catch (err) {
@@ -38,16 +48,7 @@ app.use(cors({
 }));
 
 // Rate Limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  message: 'Too many requests from this IP',
-  validate: {
-    trustProxy: true,
-    xForwardedForHeader: true
-  }
-});
-app.use(limiter);
+
 
 // Body Parsing
 app.use(express.json({ limit: '10kb' }));
@@ -69,6 +70,9 @@ app.use((req, res, next) => {
   next();
 });
 
+app.get('/api/health', (req, res) => {
+  res.sendStatus(200);
+});
 // API Routes
 app.use('/api/products', productRouter);
 app.use('/api/users', userRouter);
