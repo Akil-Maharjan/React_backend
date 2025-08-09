@@ -15,23 +15,7 @@ dotenv.config();
 const app = express();
 
 // ───────────────────────────────────────────
-// 1. Early request path validation
-// ───────────────────────────────────────────
-app.use((req, res, next) => {
-  try {
-    if (req.originalUrl.includes('git.new')) {
-      console.error('❌ Invalid route detected:', req.originalUrl);
-      return res.status(400).json({ error: 'Invalid request path' });
-    }
-    next();
-  } catch (err) {
-    console.error('❌ Path validation error:', err);
-    return res.status(400).json({ error: 'Bad request' });
-  }
-});
-
-// ───────────────────────────────────────────
-// 2. Trust proxy & rate limiting
+// 1. Trust proxy & rate limiting
 // ───────────────────────────────────────────
 app.set('trust proxy', 1);
 const limiter = rateLimit({
@@ -44,14 +28,38 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // ───────────────────────────────────────────
-// 3. Security Middleware
+// 2. Security Middleware
 // ───────────────────────────────────────────
 app.use(helmet());
-app.use(cors());
-app.options('*', cors()); // Handle preflight
 
 // ───────────────────────────────────────────
-// 4. Body Parsing & File Upload
+// 3. CORS Setup (explicit frontend domain)
+// ───────────────────────────────────────────
+app.use(cors({
+  origin: 'https://my-react-app-taupe-six.vercel.app', // your frontend URL
+  methods: ['GET', 'POST', 'PATCH', 'DELETE'],
+  credentials: true
+}));
+app.options('*', cors({
+  origin: 'https://my-react-app-taupe-six.vercel.app',
+  methods: ['GET', 'POST', 'PATCH', 'DELETE'],
+  credentials: true
+}));
+
+// ───────────────────────────────────────────
+// 4. Malformed URL Guard (prevents path-to-regexp crash)
+// ───────────────────────────────────────────
+app.all('*', (req, res, next) => {
+  // Block URLs like /api/: or weird git.new paths
+  if (/\/:[^/]*$/.test(req.originalUrl) || req.originalUrl.includes('git.new')) {
+    console.error('❌ Invalid route detected:', req.originalUrl);
+    return res.status(400).json({ error: 'Invalid request path' });
+  }
+  next();
+});
+
+// ───────────────────────────────────────────
+// 5. Body Parsing & File Upload
 // ───────────────────────────────────────────
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true }));
@@ -64,7 +72,7 @@ app.use(fileUpload({
 }));
 
 // ───────────────────────────────────────────
-// 5. Database Connection with Retry
+// 6. Database Connection with Retry
 // ───────────────────────────────────────────
 const connectWithRetry = async () => {
   try {
@@ -85,7 +93,7 @@ const connectWithRetry = async () => {
 connectWithRetry();
 
 // ───────────────────────────────────────────
-// 6. Routes
+// 7. Routes
 // ───────────────────────────────────────────
 app.get('/', (req, res) => {
   res.json({
@@ -106,7 +114,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // ───────────────────────────────────────────
-// 7. Error Handling
+// 8. Error Handling
 // ───────────────────────────────────────────
 app.use((err, req, res, next) => {
   console.error('❌ Server error:', err.stack);
@@ -114,7 +122,7 @@ app.use((err, req, res, next) => {
 });
 
 // ───────────────────────────────────────────
-// 8. Serverless-friendly export
+// 9. Serverless-friendly export
 // ───────────────────────────────────────────
 const PORT = process.env.PORT || 5000;
 if (process.env.NODE_ENV !== 'production') {
