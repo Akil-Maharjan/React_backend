@@ -26,7 +26,13 @@ const limiter = rateLimit({
   legacyHeaders: false,
 });
 app.use(limiter);
-
+app.use((req, res, next) => {
+  // Replace 'https://my-react-app-taupe-six.vercel.app' with the actual origin of your frontend
+  res.setHeader('Access-Control-Allow-Origin', 'https://my-react-app-taupe-six.vercel.app');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE'); // Add allowed methods
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization'); // Add allowed headers
+  next();
+});
 // ───────────────────────────────────────────
 // 2. Security Middleware
 // ───────────────────────────────────────────
@@ -125,10 +131,10 @@ app.use((err, req, res, next) => {
 // 9. Serverless-friendly export
 // ───────────────────────────────────────────
 const PORT = process.env.PORT || 5000;
-if (process.env.NODE_ENV !== 'production') {
+
   app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
   });
-}
+
 
 export default app;
