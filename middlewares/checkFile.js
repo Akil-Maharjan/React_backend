@@ -19,8 +19,9 @@ const validateImageFile = (file) => {
 // Original checkFile (unchanged)
 export const checkFile = async (req, res, next) => {
   if (req.url.includes('git.new')) {
-    return res.status(400).json({ error: 'Invalid request path' });
-  }
+  console.error('Blocked request due to git.new in URL:', req.url);
+  return res.status(400).json({ error: 'Invalid request path' });
+}
   if (!req.files?.image) return next();
 
   const validation = validateImageFile(req.files.image);
