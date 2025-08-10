@@ -21,9 +21,9 @@ if (!process.env.MONGODB_URI) {
 
 const app = express();
 
-// // ───────────────────────────────────────────
-// // 0. Malformed URL Guard
-// // ───────────────────────────────────────────
+// ───────────────────────────────────────────
+// 0. Malformed URL Guard
+// ───────────────────────────────────────────
 app.use((req, res, next) => {
   if (req.path.includes('/:') || req.path.endsWith(':')) {
     console.error(`Blocking invalid path: ${req.path}`);
@@ -32,9 +32,9 @@ app.use((req, res, next) => {
   next();
 });
 
-// // ───────────────────────────────────────────
-// // 1. Trust proxy & rate limiting
-// // ───────────────────────────────────────────
+// ───────────────────────────────────────────
+// 1. Trust proxy & rate limiting
+// ───────────────────────────────────────────
 app.set('trust proxy', 1);
 app.use(rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -44,43 +44,58 @@ app.use(rateLimit({
   legacyHeaders: false,
 }));
 
-// // ───────────────────────────────────────────
-// // 2. Security Middleware
-// // ───────────────────────────────────────────
+// ───────────────────────────────────────────
+// 2. Security Middleware
+// ───────────────────────────────────────────
 app.use(helmet());
 
-// // ───────────────────────────────────────────
-// // 3. CORS Setup
-// // ───────────────────────────────────────────
+// ───────────────────────────────────────────
+// 3. CORS Setup - Dynamic origin & full options
+// ───────────────────────────────────────────
+const allowedOrigins = [
+  'https://my-react-app-taupe-six.vercel.app', 
+  'http://localhost:5173',
+  'https://my-react-ac5khiwo4-akils-projects-5424d5f4.vercel.app' // add your actual frontend deployed URL here
+];
+
 app.use(cors({
-  origin: ['https://my-react-app-taupe-six.vercel.app', 'http://localhost:5173'],
-  methods: ['GET', 'POST', 'PATCH', 'DELETE'],
-  credentials: true
+  origin: (origin, callback) => {
+    // Allow requests with no origin like mobile apps or curl
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('CORS policy: This origin is not allowed'));
+    }
+  },
+  methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  credentials: true,
 }));
 
-// // ───────────────────────────────────────────
-// // 4. Logging middleware (moved up)
-// // ───────────────────────────────────────────
+// ───────────────────────────────────────────
+// 4. Logging middleware (moved up)
+// ───────────────────────────────────────────
 app.use((req, res, next) => {
   console.log(`Incoming: ${req.method} ${req.originalUrl}`);
   next();
 });
 
-// // ───────────────────────────────────────────
-// // 5. Body Parsing & File Upload
-// // ───────────────────────────────────────────
+// ───────────────────────────────────────────
+// 5. Body Parsing & File Upload
+// ───────────────────────────────────────────
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(fileUpload({
   limits: { fileSize: 50 * 1024 * 1024 },
   abortOnLimit: true,
   useTempFiles: true,
-  tempFileDir: '/tmp/'
+  tempFileDir: '/tmp/',
 }));
 
-// // ───────────────────────────────────────────
-// // 6. Database Connection with Retry
-// // ───────────────────────────────────────────
+// ───────────────────────────────────────────
+// 6. Database Connection with Retry
+// ───────────────────────────────────────────
 const connectWithRetry = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI, {
@@ -97,9 +112,9 @@ const connectWithRetry = async () => {
 };
 connectWithRetry();
 
-// // ───────────────────────────────────────────
-// // 7. Routes
-// // ───────────────────────────────────────────
+// ───────────────────────────────────────────
+// 7. Routes
+// ───────────────────────────────────────────
 app.get('/', (req, res) => {
   res.json({
     status: 'running',
@@ -111,20 +126,23 @@ app.use('/api/products', productRouter);
 app.use('/api/users', userRouter);
 app.get('/api/health', (req, res) => res.status(200).json({ status: 'ok' }));
 
-// // ───────────────────────────────────────────
-// // 8. 404 Handler
-// // ───────────────────────────────────────────
+// ───────────────────────────────────────────
+// 8. 404 Handler (optional)
+// ───────────────────────────────────────────
 // app.all('*', (req, res) => {
 //   res.status(404).json({ error: `Not Found - Cannot ${req.method} ${req.originalUrl}` });
 // });
 
-// // ───────────────────────────────────────────
-// // 9. Error Handling
-// // ───────────────────────────────────────────
-// app.use((err, req, res, next) => {
-//   console.error('❌ Server error:', err);
-//   res.status(500).json({ error: 'Internal Server Error', details: err.message });
-// });
+// ───────────────────────────────────────────
+// 9. Error Handling
+// ───────────────────────────────────────────
+app.use((err, req, res, next) => {
+  console.error('❌ Server error:', err);
+  if (err.message && err.message.includes('CORS')) {
+    return res.status(403).json({ error: 'CORS error: Access denied from this origin.' });
+  }
+  res.status(500).json({ error: 'Internal Server Error', details: err.message });
+});
 
 // ───────────────────────────────────────────
 // 10. Start Server
