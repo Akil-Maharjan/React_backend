@@ -70,7 +70,7 @@ export const userRegister = async (req, res) => {
       username,
       email,
       password: hashedPassword,
-      role: 'user' // Default role
+      role: 'User' // Default role
     });
 
     // Generate token
