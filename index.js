@@ -122,6 +122,16 @@ app.get('/', (req, res) => {
     endpoints: { api: '/api/*', health: '/api/health' }
   });
 });
+   router.get('/debug-users', async (req, res) => {
+  try {
+    const User = (await import('../models/User.js')).default;
+    const users = await User.find({}, { email: 1, username: 1, _id: 0 }); // Only show email and username
+    res.json({ users });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.use('/api/products', productRouter);
 app.use('/api/users', userRouter);
 app.get('/api/health', (req, res) => res.status(200).json({ status: 'ok' }));
