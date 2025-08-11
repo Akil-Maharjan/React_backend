@@ -38,7 +38,7 @@ const productSchema = new mongoose.Schema({
       "Converse",
       "Dell",
       "Acer",
-      "MacBook",
+      "Macbook",
       "Iphone",
       "Samsung",
       "Sony",
