@@ -55,7 +55,8 @@ app.use(helmet());
 const allowedOrigins = [
   'https://my-react-app-taupe-six.vercel.app', 
   'http://localhost:5173',
-  'https://my-react-ac5khiwo4-akils-projects-5424d5f4.vercel.app' // add your actual frontend deployed URL here
+  'https://my-react-ac5khiwo4-akils-projects-5424d5f4.vercel.app',
+  'https://my-react-app-git-main-akils-projects-5424d5f4.vercel.app' // add your actual frontend deployed URL here
 ];
 
 app.use(cors({
