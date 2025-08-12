@@ -128,7 +128,7 @@ app.get('/', (req, res) => {
 app.use('/api/products', productRouter);
 app.use('/api/users', userRouter);
 app.get('/api/health', (req, res) => res.status(200).json({ status: 'ok' }));
-
+app.use('/uploads', express.static('uploads'));
 // ───────────────────────────────────────────
 // 8. 404 Handler (optional)
 // ───────────────────────────────────────────
